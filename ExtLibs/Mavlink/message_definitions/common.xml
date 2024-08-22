@@ -4198,6 +4198,21 @@
 			  <description>The GPS receiver detected signal spoofing.</description>
 		  </entry> 
 	  </enum>
+	  <enum name="GPS_RAIM_STATE">
+		  <description>State of RAIM processing.</description>
+		  <entry value="0" name="GPS_RAIM_STATE_UNKNOWN">
+			  <description>Raim capability unknown.</description>
+		  </entry>
+		  <entry value="1" name="GPS_RAIM_STATE_DISABLED">
+			  <description>Raim is disabled.</description>
+		  </entry>
+		  <entry value="2" name="GPS_RAIM_STATE_OK">
+			  <description>RAIM integrity check was successfull.</description>
+		  </entry>
+		  <entry value="3" name="GPS_RAIM_STATE_FAILED">
+			  <description>RAIM integrity check failed.</description>
+		  </entry> GPS_RAIM_STATE
+	  </enum>
   </enums>
   <messages>
     <message id="1" name="SYS_STATUS">
@@ -4305,10 +4320,6 @@
       <field type="uint32_t" name="vel_acc" units="mm">Speed uncertainty.</field>
       <field type="uint32_t" name="hdg_acc" units="degE5">Heading / track uncertainty</field>
       <field type="uint16_t" name="yaw" units="cdeg">Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use 65535 if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.</field>
-	  <field type="uint32_t" name="system_errors" enum="GPS_SYSTEM_ERROR_FLAGS" display="bitmask">Errors in the GPS system</field>
-	  <field type="uint8_t" name="authentication_state" enum="GPS_AUTHENTICATION_STATE">Signal authentication state of the GPS system</field>
-	  <field type="uint8_t" name="jamming_state" enum="GPS_JAMMING_STATE">Signal jamming state of the GPS system</field>
-	  <field type="uint8_t" name="spoofing_state" enum="GPS_SPOOFING_STATE">Signal spoofing state of the GPS system</field>
     </message>
     <message id="25" name="GPS_STATUS">
       <description>The positioning status, as reported by GPS. This message is intended to display status information about each satellite visible to the receiver. See message GLOBAL_POSITION for the global position estimate. This message can contain information for up to 20 satellites.</description>
@@ -6451,6 +6462,22 @@
       <field type="uint8_t" name="num_ids">number of IDs in filter list</field>
       <field type="uint16_t[16]" name="ids">filter IDs, length num_ids</field>
     </message>
+	<message id="441" name="GNSS_INTEGRITY">
+	  <description>Information about gnss integrity.</description>
+	  <field type="uint8_t" name="id" instance="true">GNSS receiver ID.</field>
+	  <field type="uint32_t" name="system_errors" enum="GPS_SYSTEM_ERROR_FLAGS" display="bitmask">Error in gps.</field>
+	  <field type="uint8_t" name="authentication_state" enum="GPS_AUTHENTICATION_STATE">signal authentication</field>
+	  <field type="uint8_t" name="jamming_state" enum="GPS_JAMMING_STATE">signal jamming.</field>
+	  <field type="uint8_t" name="spoofing_state" enum="GPS_SPOOFING_STATE">signal spoofing.</field>
+	  <field type="uint8_t" name="raim_state" enum="GPS_RAIM_STATE">signal raim.</field>
+	  <field type="uint16_t" name="raim_hfom" units="cm" invalid="UINT16_MAX">raim hfom.</field>
+      <field type="uint16_t" name="raim_vfom" units="cm" invalid="UINT16_MAX">raim vfom.</field>
+      <field type="uint8_t" name="correction_quality" minValue="0" maxValue="10" invalid="UINT8_MAX">signal authentication</field>
+      <field type="uint8_t" name="system_status_summary" minValue="0" maxValue="10" invalid="UINT8_MAX">signal authentication</field>
+	  <field type="uint8_t" name="gnss_signal_quality" minValue="0" maxValue="10" invalid="UINT8_MAX">signal authentication</field>
+      <field type="uint8_t" name="post_processing_quality"  minValue="0" maxValue="10" invalid="UINT8_MAX">signal authentication</field>
+	  <field type="uint16_t[16]" name="ids">filter IDs, length num_ids</field>
+	</message>
     <!-- Rover specific messages -->
     <message id="9000" name="WHEEL_DISTANCE">
       <description>Cumulative distance traveled for each reported wheel.</description>
