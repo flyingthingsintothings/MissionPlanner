@@ -275,6 +275,7 @@ public partial class MAVLink
         new message_info(386, "CAN_FRAME", 132, 16, 16, typeof( mavlink_can_frame_t )),
         new message_info(387, "CANFD_FRAME", 4, 72, 72, typeof( mavlink_canfd_frame_t )),
         new message_info(388, "CAN_FILTER_MODIFY", 8, 37, 37, typeof( mavlink_can_filter_modify_t )),
+        new message_info(441, "GNSS_INTEGRITY", 8, 137, 137, typeof( mavlink_gnss_integrity_t )), //TODO: size check
         new message_info(9000, "WHEEL_DISTANCE", 113, 137, 137, typeof( mavlink_wheel_distance_t )),
         new message_info(9005, "WINCH_STATUS", 117, 34, 34, typeof( mavlink_winch_status_t )),
         new message_info(10001, "UAVIONIX_ADSB_OUT_CFG", 209, 20, 20, typeof( mavlink_uavionix_adsb_out_cfg_t )),
@@ -604,6 +605,7 @@ public partial class MAVLink
         CAN_FRAME = 386,
         CANFD_FRAME = 387,
         CAN_FILTER_MODIFY = 388,
+        GNSS_INTEGRITY = 441,
         WHEEL_DISTANCE = 9000,
         WINCH_STATUS = 9005,
         UAVIONIX_ADSB_OUT_CFG = 10001,
@@ -13053,7 +13055,7 @@ public partial class MAVLink
     public struct mavlink_gps_raw_int_t
     {
         /// packet ordered constructor
-        public mavlink_gps_raw_int_t(ulong time_usec,int lat,int lon,int alt,ushort eph,ushort epv,ushort vel,ushort cog,/*GPS_FIX_TYPE*/byte fix_type,byte satellites_visible,int alt_ellipsoid,uint h_acc,uint v_acc,uint vel_acc,uint hdg_acc,ushort yaw,/*GPS_SYSTEM_ERROR_FLAGS*/uint system_errors,/*GPS_AUTHENTICATION_STATE*/byte authentication_state,/*GPS_JAMMING_STATE*/byte jamming_state,/*GPS_SPOOFING_STATE*/byte spoofing_state) 
+        public mavlink_gps_raw_int_t(ulong time_usec,int lat,int lon,int alt,ushort eph,ushort epv,ushort vel,ushort cog,/*GPS_FIX_TYPE*/byte fix_type,byte satellites_visible,int alt_ellipsoid,uint h_acc,uint v_acc,uint vel_acc,uint hdg_acc,ushort yaw) 
         {
             this.time_usec = time_usec;
             this.lat = lat;
@@ -13071,15 +13073,11 @@ public partial class MAVLink
             this.vel_acc = vel_acc;
             this.hdg_acc = hdg_acc;
             this.yaw = yaw;
-            this.system_errors = system_errors;
-            this.authentication_state = authentication_state;
-            this.jamming_state = jamming_state;
-            this.spoofing_state = spoofing_state;
             
         }
         
         /// packet xml order
-        public static mavlink_gps_raw_int_t PopulateXMLOrder(ulong time_usec,/*GPS_FIX_TYPE*/byte fix_type,int lat,int lon,int alt,ushort eph,ushort epv,ushort vel,ushort cog,byte satellites_visible,int alt_ellipsoid,uint h_acc,uint v_acc,uint vel_acc,uint hdg_acc,ushort yaw,/*GPS_SYSTEM_ERROR_FLAGS*/uint system_errors,/*GPS_AUTHENTICATION_STATE*/byte authentication_state,/*GPS_JAMMING_STATE*/byte jamming_state,/*GPS_SPOOFING_STATE*/byte spoofing_state) 
+        public static mavlink_gps_raw_int_t PopulateXMLOrder(ulong time_usec,/*GPS_FIX_TYPE*/byte fix_type,int lat,int lon,int alt,ushort eph,ushort epv,ushort vel,ushort cog,byte satellites_visible,int alt_ellipsoid,uint h_acc,uint v_acc,uint vel_acc,uint hdg_acc,ushort yaw) 
         {
             var msg = new mavlink_gps_raw_int_t();
 
@@ -13099,10 +13097,6 @@ public partial class MAVLink
             msg.vel_acc = vel_acc;
             msg.hdg_acc = hdg_acc;
             msg.yaw = yaw;
-            msg.system_errors = system_errors;
-            msg.authentication_state = authentication_state;
-            msg.jamming_state = jamming_state;
-            msg.spoofing_state = spoofing_state;
             
             return msg;
         }
@@ -13203,30 +13197,6 @@ public partial class MAVLink
         [Description("Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use 65535 if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.")]
         //[FieldOffset(50)]
         public  ushort yaw;
-
-        /// <summary>Errors in the GPS system GPS_SYSTEM_ERROR_FLAGS  bitmask</summary>
-        [Units("")]
-        [Description("Errors in the GPS system")]
-        //[FieldOffset(52)]
-        public  /*GPS_SYSTEM_ERROR_FLAGS*/uint system_errors;
-
-        /// <summary>Signal authentication state of the GPS system GPS_AUTHENTICATION_STATE  </summary>
-        [Units("")]
-        [Description("Signal authentication state of the GPS system")]
-        //[FieldOffset(56)]
-        public  /*GPS_AUTHENTICATION_STATE*/byte authentication_state;
-
-        /// <summary>Signal jamming state of the GPS system GPS_JAMMING_STATE  </summary>
-        [Units("")]
-        [Description("Signal jamming state of the GPS system")]
-        //[FieldOffset(57)]
-        public  /*GPS_JAMMING_STATE*/byte jamming_state;
-
-        /// <summary>Signal spoofing state of the GPS system GPS_SPOOFING_STATE  </summary>
-        [Units("")]
-        [Description("Signal spoofing state of the GPS system")]
-        //[FieldOffset(58)]
-        public  /*GPS_SPOOFING_STATE*/byte spoofing_state;
     };
 
     
@@ -13305,9 +13275,125 @@ public partial class MAVLink
 		public byte[] satellite_snr;
     };
 
-    
-    /// extensions_start 10
-    [StructLayout(LayoutKind.Sequential,Pack=1,Size=24)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 0)] //TODO
+    ///<summary> Several GPS receiver quality indicators, as sent by the GPS.
+    public struct mavlink_gnss_integrity_t
+    {
+        /// packet ordered constructor
+        public mavlink_gnss_integrity_t(byte id, ulong system_errors, byte authentication_state, byte jamming_state, byte spoofing_state, byte raim_state, ushort raim_hfom, ushort raim_vfom, byte corrections_quality, byte system_status_summary, byte gnss_signal_quality, byte post_processing_quality)
+        {
+            this.id = id;
+            this.system_errors = system_errors;
+            this.authentication_state = authentication_state;
+            this.jamming_state = jamming_state;
+            this.spoofing_state = spoofing_state;
+            this.raim_state = raim_state;
+            this.raim_hfom = raim_hfom;
+            this.raim_vfom = raim_vfom;
+            this.corrections_quality = corrections_quality;
+            this.system_status_summary = system_status_summary;
+            this.gnss_signal_quality = gnss_signal_quality;
+            this.post_processing_quality = post_processing_quality;
+        }
+
+        /// packet xml order
+        public static mavlink_gnss_integrity_t PopulateXMLOrder(byte id, ulong system_errors, byte authentication_state, byte jamming_state, byte spoofing_state, byte raim_state, ushort raim_hfom, ushort raim_vfom, byte corrections_quality, byte system_status_summary, byte gnss_signal_quality, byte post_processing_quality)
+        {
+            var msg = new mavlink_gnss_integrity_t();
+
+            msg.id = id;
+            msg.system_errors = system_errors;
+            msg.authentication_state = authentication_state;
+            msg.jamming_state = jamming_state;
+            msg.spoofing_state = spoofing_state;
+            msg.raim_state = raim_state;
+            msg.raim_hfom = raim_hfom;
+            msg.raim_vfom = raim_vfom;
+            msg.corrections_quality = corrections_quality;
+            msg.system_status_summary = system_status_summary;
+            msg.gnss_signal_quality = gnss_signal_quality;
+            msg.post_processing_quality = post_processing_quality;
+
+            return msg;
+        }
+
+        /// <summary>id of the GPS receiver   </summary>
+        [Units("")]
+        [Description("id of the GPS")]
+        //[FieldOffset(0)]
+        public byte id;
+        
+        /// <summary>system errors detected by the GPS   </summary>
+        [Units("")]
+        [Description("system error bitmask of the GPS system")]
+        //[FieldOffset(8)]
+        public ulong system_errors;
+
+        /// <summary>satellite authentication state of the GPS   </summary>
+        [Units("")]
+        [Description("satellite authentication state of the GPS")]
+        //[FieldOffset(40)]
+        public byte authentication_state;
+
+        /// <summary>jamming state detected by the GPS   </summary>
+        [Units("")]
+        [Description("signal jamming detected by the GPS")]
+        //[FieldOffset(48)]
+        public byte jamming_state;
+
+        /// <summary>spoofing state detected by the GPS   </summary>
+        [Units("")]
+        [Description("signal spoofing detected by the GPS")]
+        //[FieldOffset(56)]
+        public byte spoofing_state;
+
+        /// <summary>RAIM state of the GPS   </summary>
+        [Units("")]
+        [Description("RAIM state of the GPS")]
+        //[FieldOffset(64)]
+        public byte raim_state;
+
+        /// <summary>>horizontal expected accuracy using satellites validated using RAIM   </summary>
+        [Units("cm")]
+        [Description("horizontal expected accuracy using satellites validated using RAIM")]
+        //[FieldOffset(72)]
+        public ushort raim_hfom;
+
+        /// <summary>vertical expected accuracy using satellites validated using RAIM   </summary>
+        [Units("cm")]
+        [Description("vertical expected accuracy using satellites validated using RAIM")]
+        //[FieldOffset(88)]
+        public ushort raim_vfom;
+
+        /// <summary>estimated quality of the incoming correction   </summary>
+        [Units("")]
+        [Description("correction quality reported by the GPS, 255 if not available")]
+        //[FieldOffset(104)]
+        public byte corrections_quality;
+
+        /// <summary>overall quality of the GPS   </summary>
+        [Units("")]
+        [Description("overall quality of the GPS, 255 if not available")]
+        //[FieldOffset(112)]
+        public byte system_status_summary;
+
+        /// <summary>quality indicator of the incoming GNSS signal   </summary>
+        [Units("")]
+        [Description("quality indicator of the incoming GNSS signal, 255 if not available")]
+        //[FieldOffset(120)]
+        public byte gnss_signal_quality;
+
+        /// <summary>quality indicator of the estimated PPK quality   </summary>
+        [Units("")]
+        [Description("quality indicator of the estimated PPK quality, 255 if not available")]
+        //[FieldOffset(128)]
+        public byte post_processing_quality;
+
+    }
+
+
+        /// extensions_start 10
+        [StructLayout(LayoutKind.Sequential,Pack=1,Size=24)]
     ///<summary> The RAW IMU readings for the usual 9DOF sensor setup. This message should contain the scaled values to the described units </summary>
     public struct mavlink_scaled_imu_t
     {
